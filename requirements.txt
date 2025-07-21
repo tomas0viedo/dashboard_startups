@@ -3,3 +3,6 @@ pymongo
 python-dotenv
 pandas
 altair
+Flask
+Flask-Cors
+gunicorn
