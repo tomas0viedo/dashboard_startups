@@ -4,7 +4,7 @@ from pymongo.server_api import ServerApi
 from dotenv import load_dotenv
 import os
 import pandas as pd
-import altair as alt
+# import altair as alt # Ya no se usa directamente en este código, se podría quitar
 import plotly.express as px
 from datetime import datetime
 from bson.objectid import ObjectId
@@ -33,6 +33,7 @@ def init_connection():
 db = init_connection()
 
 # --- Obtener Colecciones ---
+# CORRECCIÓN: Usar 'is not None' para verificar la conexión 'db'
 startups_collection = db["startup"] if db is not None else None
 mentors_collection = db["mentors"] if db is not None else None
 sessions_collection = db["sessions"] if db is not None else None
@@ -51,6 +52,7 @@ def serialize_doc(doc):
             doc[key] = serialize_doc(value)
     return doc
 
+# CORRECCIÓN: Eliminar @st.cache_data de get_data
 def get_data(collection):
     if collection is None:
         return []
