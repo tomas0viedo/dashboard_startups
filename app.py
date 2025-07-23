@@ -7,6 +7,7 @@ import pandas as pd
 import plotly.express as px
 from datetime import datetime
 from bson.objectid import ObjectId
+import io
 
 # --- Configuración de la página ---
 st.set_page_config(layout="wide", page_title="Dashboard de Startups y Sesiones",
@@ -87,7 +88,6 @@ def get_sessions_with_details():
         return []
     
     pipeline = [
-        # Asegurarse de que el campo 'mentor' en sessions sea ObjectId o se convierta
         {"$addFields": {
             "mentorObjectId": {
                 "$cond": {
@@ -117,10 +117,8 @@ def get_sessions_with_details():
         {"$project": {
             "_id": {"$toString": "$_id"},
             "mentor_id": {"$toString": {"$ifNull": ["$mentor_info._id", None]}},
-            # CAMBIO PRINCIPAL: Renombra el campo a "Company Name" y extrae de 'mentor_info.company'
             "Company Name": {"$ifNull": ["$mentor_info.company", "Compañía Desconocida"]}, 
             "startup_id": {"$toString": {"$ifNull": ["$startup_info._id", None]}},
-            # Intenta 'name' primero, luego 'company', si no, "Startup Desconocida"
             "startup_company": {"$ifNull": ["$startup_info.name", "$startup_info.company", "Startup Desconocida"]},
             "date": {"$dateToString": {"format": "%Y-%m-%d %H:%M", "date": "$date"}},
             "topic": "$topic",
@@ -256,7 +254,7 @@ else:
             
             if filtered_sessions_by_status:
                 df_filtered_sessions = pd.DataFrame(filtered_sessions_by_status)
-                # Renombrar columnas para la visualización
+
                 df_display_detail = df_filtered_sessions.rename(columns={
                     "date": "Fecha",
                     "Company Name": "Compañía Mentor",
@@ -282,7 +280,7 @@ else:
         
         if sessions_detailed:
             df_sessions_full = pd.DataFrame(sessions_detailed)
-            # Renombrar columnas para la visualización y descarga
+
             df_display_download = df_sessions_full.rename(columns={
                 "date": "Fecha",
                 "Company Name": "Compañía Mentor",
@@ -296,16 +294,21 @@ else:
                 "mentorSigned": "Mentor Firmó",
                 "startupSigned": "Startup Firmó"
             })
-            # Ocultar la columna '_id'
+
             col_order_download = ["Fecha", "Compañía Mentor", "Compañía Startup", "Tema", "Estado", "Resumen", "Duración", "Comentarios", "URL PDF", "Mentor Firmó", "Startup Firmó"]
             df_display_download = df_display_download.reindex(columns=[col for col in col_order_download if col in df_display_download.columns])
             
             st.dataframe(df_display_download, use_container_width=True)
+            
+            excel_buffer = io.BytesIO()
+            df_display_download.to_excel(excel_buffer, index=False, engine='openpyxl')
+            excel_buffer.seek(0) 
+            
             st.download_button(
-                label="Descargar todas las Sesiones (CSV)",
-                data=df_sessions_full.to_csv(index=False).encode('utf-8'),
-                file_name="all_sessions_data.csv",
-                mime="text/csv",
+                label="Descargar todas las Sesiones (Excel)",
+                data=excel_buffer,
+                file_name="all_sessions_data.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
         else:
             st.info("No hay sesiones registradas para mostrar o descargar.")
