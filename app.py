@@ -31,6 +31,10 @@ st.markdown(
         background-color: var(--background-color, #f1f5f9); /* Usa la variable de Streamlit o un gris claro */
         color: var(--text-color, #475569); /* Color de texto oscuro para cabeceras */
     }
+    /* Oculta la línea de carga de Streamlit */
+    .stApp > header {
+        display: none;
+    }
     </style>
     """,
     unsafe_allow_html=True
@@ -291,11 +295,10 @@ else:
                 "duration": "Duración",
                 "comments": "Comentarios",
                 "pdfUrl": "URL PDF",
-                "mentorSigned": "Mentor Firmó",
-                "startupSigned": "Startup Firmó"
             })
 
-            col_order_download = ["Fecha", "Compañía Mentor", "Compañía Startup", "Tema", "Estado", "Resumen", "Duración", "Comentarios", "URL PDF", "Mentor Firmó", "Startup Firmó"]
+            # Excluye las columnas "Mentor Firmó" y "Startup Firmó"
+            col_order_download = ["Fecha", "Compañía Mentor", "Compañía Startup", "Tema", "Estado", "Resumen", "Duración", "Comentarios", "URL PDF"]
             df_display_download = df_display_download.reindex(columns=[col for col in col_order_download if col in df_display_download.columns])
             
             st.dataframe(df_display_download, use_container_width=True)
